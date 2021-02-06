@@ -3,7 +3,11 @@ import sys
 from pathlib import Path
 from shutil import copyfile, copy
 
-PROJECT_DIR = "C:\\Users\\" + os.getlogin() + "\\AppData\\LocalLow\\CodeView\\Reworld Engine\\Scene_MyGame\\0G Racer"
+PROJECT_NAME = "0G Racer"
+REMOVE_EMPTY_DIRECTORIES = True
+
+ENGINE_DIR = "C:\\Users\\" + os.getlogin() + "\\AppData\\LocalLow\\CodeView\\Reworld Engine"
+PROJECT_DIR = ENGINE_DIR + "\\Scene_MyGame\\" + PROJECT_NAME
 toolDir = "extractedScripts"
 scriptsDir = toolDir + "\\scripts"
 ignoreDir = toolDir + "\\temp"
@@ -21,6 +25,18 @@ def validateInstallLocation():
        os.mkdir(ignoreDir)
     if not os.path.isdir(scriptsDir):
         os.mkdir(scriptsDir)
+
+def remove_empty_dir(path):
+    try:
+        os.rmdir(path)
+    except OSError:
+        pass
+
+def removeEmptyDirs():
+    os.chdir(ENGINE_DIR)
+    for root, dirnames, filenames in os.walk(ENGINE_DIR, topdown=False):
+        for dirname in dirnames:
+            remove_empty_dir(os.path.realpath(os.path.join(root, dirname)))
 
 def printAdded():
     print("--------------Files Copied--------------")
@@ -96,8 +112,11 @@ def getLuaFiles():
 
                     if copyDir in filesAdded.keys():
                         if not shouldReplaceCopy(path, filesAdded[copyDir]):
-                            os.remove(tempPath)
-                            os.remove(path)
+                            try:
+                                os.remove(tempPath)
+                                os.remove(path)
+                            except:
+                                pass
                             filesPruned.append(path)
                             continue
 
@@ -105,10 +124,14 @@ def getLuaFiles():
                     filesAdded[copyDir] = path
         else:
             filesIgnored.append(path)
-            
-        os.remove(tempPath)
-
-    os.rmdir(PROJECT_DIR + "/" + toolDir + "/temp")
+        try:  
+            os.remove(tempPath)
+        except:
+            pass
+    try:
+        os.rmdir(PROJECT_DIR + "/" + toolDir + "/temp")
+    except:
+        pass
 
 
 
@@ -116,3 +139,5 @@ validateInstallLocation()
 getLuaFiles()
 outputResult()
 
+if REMOVE_EMPTY_DIRECTORIES:
+    removeEmptyDirs()
